@@ -1,16 +1,18 @@
 ptw <- function (ref, samp, selected.traces,
                  init.coef = c(0, 1, 0), try = FALSE,
+                 alg = c("ptw", "sptw"),
 		 warp.type = c("individual", "global"),
 		 optim.crit = c("WCC", "RMS"),
                  mode = c("forward", "backward"),
 		 smooth.param = ifelse(try, 0, 1e05),
 		 trwdth = 20, trwdth.res = trwdth,
-                 verbose = FALSE,
+                 verbose = FALSE, ndx=40,
                  ... )
 {
   optim.crit <- match.arg(optim.crit)
   warp.type <- match.arg(warp.type)
   mode <- match.arg(mode)
+  alg <- match.arg(alg, c("ptw","sptw"))
   
   if (is.vector(ref)) ref <- matrix(ref, nrow = 1)
   if (is.vector(samp)) samp <- matrix(samp, nrow = 1)
@@ -48,8 +50,11 @@ ptw <- function (ref, samp, selected.traces,
   }
   
   if (warp.type == "individual") {
-    w <- matrix(0, nrow(samp), ncol(ref))   
-    a <- matrix(0, nrow(samp), ncol(init.coef))
+    w <- matrix(0, nrow(samp), ncol(ref))
+    if (alg == "ptw")
+      a <- matrix(0, nrow(samp), ncol(init.coef))
+    if (alg == "sptw")
+      a <- matrix(0, nrow(samp), (ndx+4))
     v <- rep(0, nrow(samp))
     warped.sample <- matrix(NA, nrow=nrow(samp), ncol=ncol(samp))
     
@@ -66,9 +71,9 @@ ptw <- function (ref, samp, selected.traces,
       }
       quad.res <- pmwarp(rfrnc, samp[i, , drop = FALSE],
                          optim.crit, init.coef[i,], try = try,
-                         mode = mode,
+                         mode = mode, alg = alg,
                          smooth.param = smooth.param,
-                         trwdth = trwdth, trwdth.res = trwdth.res,
+                         trwdth = trwdth, trwdth.res = trwdth.res, ndx=ndx,
                          ...)
       
       w[i, ] <- quad.res$w
@@ -90,7 +95,7 @@ ptw <- function (ref, samp, selected.traces,
     }
 
     quad.res <- pmwarp(ref, samp, optim.crit, c(init.coef), try = try,
-                       mode = mode, smooth.param = smooth.param,
+                       mode = mode, smooth.param = smooth.param, alg = alg,
                        trwdth = trwdth, trwdth.res = trwdth.res,
                        ...)
     

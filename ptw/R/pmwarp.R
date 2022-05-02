@@ -1,17 +1,33 @@
 pmwarp <- function (ref, samp, optim.crit, init.coef, try = FALSE,
-                    mode = c("forward", "backward"),
-                    trwdth, trwdth.res, smooth.param, ...)
+                    mode = c("forward", "backward"), alg = c("ptw", "sptw"),
+                    trwdth, trwdth.res, smooth.param, ndx=40, ...)
 {
   mode <- match.arg(mode)
+  alg <- match.arg(alg, c("ptw","sptw"))
   
   ## Multiply coefficients to prevent them from becoming too 
   ## small for numeric precision.
-  n <- length(init.coef)
-  ncr <- ncol(ref)
-  time <- (1:ncr) / ncr
-  B <- matrix(time, nrow = ncr, ncol = n)
-  B <- t(apply(B, 1, cumprod))/B
-  a <- init.coef * ncr^(0:(n-1))
+  if (alg == "ptw"){
+    n <- length(init.coef)
+    ncr <- ncol(ref)
+    time <- (1:ncr)/ncr
+    B <- matrix(time, nrow = ncr, ncol = n)
+    B <- t(apply(B, 1, cumprod))/B
+    a <- init.coef * ncr^(0:(n - 1))
+  } else if (alg == "sptw"){
+    if (is.matrix(samp)){
+      m <- max(dim(samp), dim(ref))
+    } else m <- max(length(samp), length(ref))
+    time <- 1:m
+    bdeg = 3 # degree of the B-splines
+    B <- cbind(time, JOPS::bbase(time, 1, max(time), ndx, bdeg))
+  
+    n = ncol(B) # number of basis functions
+    # If a not defined in function call, initialize warping coefficients of the
+    # B-splines to 0 and the coefficient of the linear basis function to 1
+    # if (missing(a))
+    a <- c(1,rep(0,ndx+bdeg))
+  }
 
   if (optim.crit == "RMS" & smooth.param > 0) {
     samp.sm <- t(apply(samp, 1, difsm, smooth.param))
