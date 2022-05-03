@@ -111,7 +111,9 @@ ptw <- function (ref, samp, selected.traces,
   result <-list(reference = ref, sample = samp,
                 warped.sample = warped.sample,
                 warp.coef = a, warp.fun = w,
-                crit.value = v, optim.crit = optim.crit,
+                crit.value = v, alg = alg,
+                ndx=ndx,
+                optim.crit = optim.crit,
                 mode = mode,
                 warp.type = warp.type)
   class(result) <- "ptw"

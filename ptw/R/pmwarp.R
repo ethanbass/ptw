@@ -79,7 +79,8 @@ pmwarp <- function (ref, samp, optim.crit, init.coef, try = FALSE,
 
   ## back-transform coefficients
   w <- B %*% a
-  a <- a/ncr^(0:(n-1))
+  if (alg == "ptw")
+    a <- a/ncr^(0:(n-1))
   
   list(w = w, a = a, v = v)
 } 
